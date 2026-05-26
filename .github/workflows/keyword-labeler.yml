@@ -1,4 +1,4 @@
-name: Keyword Labeler
+name: Master Auto Labeler
 on:
   issues:
     types: [opened, edited]
@@ -6,7 +6,7 @@ on:
     types: [opened, edited]
 
 jobs:
-  label-based-on-keywords:
+  label-everything:
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -15,37 +15,84 @@ jobs:
       - uses: actions/github-script@v6
         with:
           script: |
+            // 1. Define ALL 16 labels explicitly with their colors
+            const allLabels = [
+              { name: 'level:beginner', color: '006b75' },
+              { name: 'level:intermediate', color: 'fbca04' },
+              { name: 'level:advanced', color: 'd93f0b' },
+              { name: 'level:critical', color: 'b60205' },
+              { name: 'quality:clean', color: '0e8a16' },
+              { name: 'quality:exceptional', color: '0052cc' },
+              { name: 'type:bug', color: 'd73a4a' },
+              { name: 'type:feature', color: 'a2eeef' },
+              { name: 'type:docs', color: '0075ca' },
+              { name: 'type:testing', color: '7057ff' },
+              { name: 'type:security', color: 'e4e669' },
+              { name: 'type:performance', color: 'd876e3' },
+              { name: 'type:design', color: 'bfd4f2' },
+              { name: 'type:refactor', color: '5319e7' },
+              { name: 'type:devops', color: '1d76db' },
+              { name: 'type:accessibility', color: 'ff9f1c' }
+            ];
+            
+            // 2. Automatically create the labels in your repository if they are missing!
+            for (const label of allLabels) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name
+                });
+              } catch (e) {
+                if (e.status === 404) {
+                  console.log(`Creating missing label: ${label.name}`);
+                  await github.rest.issues.createLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name: label.name,
+                    color: label.color
+                  });
+                }
+              }
+            }
+            
+            // 3. Scan the title and body for keywords
             const isPR = !!context.payload.pull_request;
             const payload = isPR ? context.payload.pull_request : context.payload.issue;
             const title = payload.title.toLowerCase();
             const body = (payload.body || "").toLowerCase();
             const text = title + " " + body;
-            const labels = [];
+            const labelsToAdd = [];
             
-            // --- Type Labels ---
-            if (text.includes('fix') || text.includes('bug') || text.includes('issue')) labels.push('type:bug');
-            if (text.includes('feat') || text.includes('add') || text.includes('new')) labels.push('type:feature');
-            if (text.includes('refactor') || text.includes('cleanup')) labels.push('type:refactor');
-            if (text.includes('perf') || text.includes('performance') || text.includes('speed')) labels.push('type:performance');
-            if (text.includes('security') || text.includes('vulnerability')) labels.push('type:security');
-            if (text.includes('a11y') || text.includes('accessibility')) labels.push('type:accessibility');
+            // Search for Difficulty
+            if (text.includes('beginner') || text.includes('good first issue')) labelsToAdd.push('level:beginner');
+            if (text.includes('intermediate')) labelsToAdd.push('level:intermediate');
+            if (text.includes('advanced')) labelsToAdd.push('level:advanced');
+            if (text.includes('critical') || text.includes('urgent')) labelsToAdd.push('level:critical');
             
-            // --- Difficulty Labels ---
-            if (text.includes('beginner') || text.includes('good first issue')) labels.push('level:beginner');
-            if (text.includes('intermediate')) labels.push('level:intermediate');
-            if (text.includes('advanced')) labels.push('level:advanced');
-            if (text.includes('critical') || text.includes('urgent')) labels.push('level:critical');
+            // Search for Quality
+            if (text.includes('clean code')) labelsToAdd.push('quality:clean');
+            if (text.includes('exceptional')) labelsToAdd.push('quality:exceptional');
             
-            // --- Quality Labels ---
-            if (text.includes('clean code')) labels.push('quality:clean');
-            if (text.includes('exceptional')) labels.push('quality:exceptional');
+            // Search for Type
+            if (text.includes('fix') || text.includes('bug')) labelsToAdd.push('type:bug');
+            if (text.includes('feat') || text.includes('add') || text.includes('new')) labelsToAdd.push('type:feature');
+            if (text.includes('doc') || text.includes('readme')) labelsToAdd.push('type:docs');
+            if (text.includes('test') || text.includes('jest')) labelsToAdd.push('type:testing');
+            if (text.includes('security') || text.includes('vulnerability')) labelsToAdd.push('type:security');
+            if (text.includes('perf') || text.includes('speed')) labelsToAdd.push('type:performance');
+            if (text.includes('css') || text.includes('design') || text.includes('ui')) labelsToAdd.push('type:design');
+            if (text.includes('refactor') || text.includes('cleanup')) labelsToAdd.push('type:refactor');
+            if (text.includes('ci') || text.includes('action') || text.includes('devops')) labelsToAdd.push('type:devops');
+            if (text.includes('a11y') || text.includes('accessibility')) labelsToAdd.push('type:accessibility');
             
-            if (labels.length > 0) {
-              const uniqueLabels = [...new Set(labels)];
-              github.rest.issues.addLabels({
+            // 4. Apply the matched labels
+            if (labelsToAdd.length > 0) {
+              const uniqueLabels = [...new Set(labelsToAdd)];
+              await github.rest.issues.addLabels({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 labels: uniqueLabels
-              })
+              });
             }
