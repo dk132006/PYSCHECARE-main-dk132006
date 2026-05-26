@@ -1,0 +1,20 @@
+name: Mark Stale Issues & PRs
+on:
+  schedule:
+  - cron: '0 0 * * *' # Runs daily at midnight
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+    - uses: actions/stale@v8
+      with:
+        stale-issue-message: 'This issue is stale because it has been open 45 days with no activity. Remove the stale label or comment, otherwise this will be closed in 7 days.'
+        stale-pr-message: 'This PR is stale because it has been open 45 days with no activity. Remove the stale label or comment, otherwise this will be closed in 7 days.'
+        stale-issue-label: 'stale'
+        stale-pr-label: 'stale'
+        days-before-stale: 45
+        days-before-close: 7
