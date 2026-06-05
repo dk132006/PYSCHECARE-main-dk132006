@@ -55,7 +55,7 @@ To run this project locally, you will need:
      python chatbot_integration.py
      ```
 ---
-  ## 📚  Quick Start for Contributors:
+## 📚  Quick Start for Contributors:
 If you're new to the project, follow this order:
    - Read this README.md for project overview.
    - Check CONTRIBUTING.md for contribution guidelines.
@@ -71,12 +71,14 @@ If you're new to the project, follow this order:
   
 ## 📄 Project Files Overview
 ---
+
 | File | Purpose |
 |------|---------|
 | README.md | Project overview and setup instructions |
 | CONTRIBUTING.md | Contribution guidelines and workflow |
 | chatbot_integration_README.md | Chatbot-related documentation |
 | requirements.txt | Python dependencies required for the project |
+
 ---      
 
 ## 🎯 Our Mission
