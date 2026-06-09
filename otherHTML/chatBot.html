@@ -211,6 +211,9 @@
                         <button class="mode-btn" id="btnVoiceMode" type="button" title="Voice Assistant Mode">
                             <i class="fas fa-microphone"></i> Voice
                         </button>
+                        <button class="mode-btn" id="btnNewChat" type="button" title="Start New Conversation">
+                            <i class="fas fa-plus"></i> New Chat
+                        </button>
                     </div>
                 </div>
 
@@ -486,6 +489,7 @@
         function setupModeToggle() {
             const btnTextMode = document.getElementById('btnTextMode');
             const btnVoiceMode = document.getElementById('btnVoiceMode');
+            const btnNewChat = document.getElementById('btnNewChat');
             const fallbackBanner = document.getElementById('fallbackBanner');
             const voiceIndicator = document.getElementById('voiceIndicator');
             const micBtn = document.getElementById('micBtn');
@@ -555,6 +559,27 @@
                     }
                 });
             }
+            if (btnNewChat) {
+                btnNewChat.addEventListener('click', () => {
+                    if (!confirm('Start a new conversation? This will clear the current chat session.')) {
+                        return;
+                    }
+                    localStorage.removeItem('psyche_session_id');
+                    console.log('Chat session reset successfully.');
+                    
+                    const msgerChat = document.querySelector(".msger-chat");
+                    if (msgerChat) {
+                        msgerChat.innerHTML = '';
+                        
+                        appendMessage(
+                             "PsycheCare Assistant",
+                             BOT_IMG,
+                             "left",
+                             "Hello! I'm your mental health assistant. Feel free to share your thoughts or ask me questions about mental health. I'm here to listen and support you."
+                            );
+                        }
+                    });
+                }
 
             if (micBtn) {
                 micBtn.addEventListener('click', () => {
@@ -729,7 +754,7 @@
                     // Send stored session_id so bot remembers conversation context
                     body: JSON.stringify({
                         message: userText,
-                        session_id: sessionStorage.getItem('psyche_session_id') || undefined
+                        session_id: localStorage.getItem('psyche_session_id') || undefined
                     })
                 });
                 
@@ -739,9 +764,9 @@
                 
                 const data = await response.json();
 
-                // Persist the session_id for the lifetime of the browser tab
+                // Persist the session_id across browser refreshes and restarts
                 if (data.session_id) {
-                    sessionStorage.setItem('psyche_session_id', data.session_id);
+                    localStorage.setItem('psyche_session_id', data.session_id);
                 }
                 
                 // Remove typing indicator
