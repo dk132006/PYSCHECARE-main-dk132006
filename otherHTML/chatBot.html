@@ -40,7 +40,14 @@
         }
     }
 })();
-        })();
+        if (isLocalStatic) {
+            console.log("Static/Local HTML view: bypassing PHP Auth Guard.");
+        } else {
+            window.location.replace('chatBot.php');
+        }
+    }
+})();
+        ();
     </script>
 
     <!-- Add these styles for the typing indicator -->
